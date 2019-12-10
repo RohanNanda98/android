@@ -66,8 +66,8 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
   // --output_node_names="final_result" \
   // --input_binary=true
   private static final int INPUT_SIZE = 48;
-  private static final float IMAGE_MEAN = 127.5f;
-  private static final float IMAGE_STD = 127.5f;
+  private static final int IMAGE_MEAN = 117;
+  private static final float IMAGE_STD = 1;
   private static final String INPUT_NAME = "conv2d_input";
   private static final String OUTPUT_NAME = "activation_5/Softmax";
 

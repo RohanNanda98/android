@@ -21,6 +21,7 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
@@ -30,6 +31,7 @@ import android.media.Image;
 import android.media.Image.Plane;
 import android.media.ImageReader;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.net.http.SslError;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -39,6 +41,10 @@ import android.util.Size;
 import android.view.KeyEvent;
 import android.view.Surface;
 import android.view.WindowManager;
+import android.webkit.SslErrorHandler;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Toast;
 import java.nio.ByteBuffer;
 import org.tensorflow.demo.env.ImageUtils;
@@ -64,6 +70,8 @@ public abstract class CameraActivity extends Activity
   private int[] rgbBytes = null;
   private int yRowStride;
 
+  WebView webview;
+
   protected int previewWidth = 0;
   protected int previewHeight = 0;
 
@@ -72,11 +80,44 @@ public abstract class CameraActivity extends Activity
 
   @Override
   protected void onCreate(final Bundle savedInstanceState) {
+
+
+
     LOGGER.d("onCreate " + this);
     super.onCreate(null);
+    setContentView(R.layout.activity_camera);
+    final String piAddr = "http://192.168.43.120:8081/";
+    webview = (WebView) findViewById(R.id.streamview);
+    webview.getSettings().setJavaScriptEnabled(true);
+    webview.getSettings().setAllowFileAccess(true);
+    webview.getSettings().setPluginState(WebSettings.PluginState.ON);
+    webview.getSettings().setDomStorageEnabled(true);
+    webview.getSettings().setAllowContentAccess(true);
+    webview.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
+    webview.zoomOut();
+    webview.clearSslPreferences();
+    // webview.setWebChromeClient(new MyWebChromeClient());
+    webview.loadUrl(piAddr);
+    webview.setWebViewClient(new WebViewClient() {
+      @Override
+      public boolean shouldOverrideUrlLoading(WebView view, String url) {
+        return false;
+      }
+      @Override
+      public void onPageStarted(WebView view, String url, Bitmap favicon) {
+        super.onPageStarted(view, url, favicon);
+      }
+      @Override
+      public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+        handler.proceed();
+      }
+      @Override
+      public void onPageFinished(WebView view, String url) {
+        super.onPageFinished(view, url);
+      }
+    });
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-    setContentView(R.layout.activity_camera);
 
     if (hasPermission()) {
       setFragment();
@@ -381,7 +422,7 @@ public abstract class CameraActivity extends Activity
 
     getFragmentManager()
         .beginTransaction()
-        .replace(R.id.container, fragment)
+        .replace(R.id.streamview, fragment)
         .commit();
   }
 
